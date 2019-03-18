@@ -12,6 +12,7 @@ It is also assumed you have setup an Azure subscription through the [Azure porta
 ## Deployment
 
 ```bash
+./zip.sh # mac/linux shell
 tf plan
 tf apply
 ```
