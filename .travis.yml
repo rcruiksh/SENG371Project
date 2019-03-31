@@ -1,0 +1,25 @@
+language: python
+
+before_install:
+        - echo "Installing Azure CLI"
+        - sudo apt-get update
+        - sudo apt-get install curl apt-transport-https lsb-release gpg
+        - curl -sL https://packages.microsoft.com/keys/microsoft.asc | \
+                gpg --dearmor | \
+                sudo tee /etc/apt/trusted.gpg.d/microsoft.asc.gpg > /dev/null
+        - AZ_REPO=$(lsb_release -cs)
+        - echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | \
+                sudo tee /etc/apt/sources.list.d/azure-cli.list
+        - sudo apt-get update
+        - sudo apt-get install azure-cli
+        - az login -u $AZ_USERNAME -p $AZ_PASSWORD
+        - echo "Installing terraform"
+        - sudo apt-get install unzip
+        - wget https://releases.hashicorp.com/terraform/0.11.13/terraform_0.11.13_linux_amd64.zip
+        - unzip terraform_0.11.13_linux_amd64.zip
+        - sudo mv terraform /usr/local/bin/
+        - terraform --version
+        - terrafrom init
+        - ./zip.sh
+        - terraform plan
+        - terraform apply
