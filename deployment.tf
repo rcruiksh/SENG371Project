@@ -1,130 +1,105 @@
-resource "azurerm_resource_group" "project2" {
-    name     = "project2-d"
-    location = "westus"
+provider "aws" {
+  region = "us-west-2"
 }
 
-resource "azurerm_app_service_plan" "project2" {
-    name                    = "project2-app-service-plan"
-    resource_group_name     = "${azurerm_resource_group.project2.name}"
-    location                = "${azurerm_resource_group.project2.location}"
-    kind                    = "FunctionApp"
+variable "bucket-prefix" {
+  default = "braidenc-"
+  type    = "string"
+}
 
-    sku {
-        tier = "Dynamic"
-        size = "Y1"
+resource "aws_lambda_function" "project2" {
+  function_name    = "dsa"
+  handler          = "function.handler"
+  runtime          = "python3.7"
+  filename         = "app.zip"
+  source_code_hash = "${base64sha256(file("app.zip"))}"
+  role             = "${aws_iam_role.project2_role.arn}"
+
+  "environment" {
+    "variables" {
+      OUTPUT_BUCKET = "${aws_s3_bucket.output.bucket}"
     }
+  }
 }
 
-resource "azurerm_storage_account" "project2" {
-    name                     = "braidencproject2"
-    resource_group_name      = "${azurerm_resource_group.project2.name}"
-    location                 = "westus"
-    account_tier             = "Standard"
-    account_replication_type = "LRS"
+resource "aws_iam_role_policy" "project2_role_policy" {
+  name = "project2_role_policy"
+  role = "${aws_iam_role.project2_role.id}"
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:*"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:PutObject*"
+            ],
+            "Resource": "${aws_s3_bucket.output.arn}"
+        }
+  ]
+}
+EOF
 }
 
-resource "azurerm_storage_container" "project2queue" {
-    name                    = "queue"
-    resource_group_name     = "${azurerm_resource_group.project2.name}"
-    storage_account_name    = "${azurerm_storage_account.project2.name}"
-    container_access_type   = "private"
-}
+resource "aws_iam_role" "project2_role" {
+    name = "project2_role"
 
-resource "azurerm_storage_container" "project2output" {
-    name                    = "output"
-    resource_group_name     = "${azurerm_resource_group.project2.name}"
-    storage_account_name    = "${azurerm_storage_account.project2.name}"
-    container_access_type   = "private"
-}
-
-resource "azurerm_storage_container" "project2temp" {
-    name                    = "temp"
-    resource_group_name     = "${azurerm_resource_group.project2.name}"
-    storage_account_name    = "${azurerm_storage_account.project2.name}"
-    container_access_type   = "private"
-}
-
-resource "azurerm_storage_blob" "test-blob" {
-    name = "text.txt"
-    resource_group_name    = "${azurerm_resource_group.project2.name}"
-    storage_account_name   = "${azurerm_storage_account.project2.name}"
-    storage_container_name = "${azurerm_storage_container.project2temp.name}"
-
-    type   = "block"
-    source = "./test.txt"
-    content_type = "text/plain"
-}
-
-resource "azurerm_storage_container" "function-code" {
-    name                    = "function-code"
-    resource_group_name     = "${azurerm_resource_group.project2.name}"
-    storage_account_name    = "${azurerm_storage_account.project2.name}"
-    container_access_type   = "private"
-}
-
-resource "azurerm_storage_blob" "code-blob" {
-    name = "app.zip"
-    resource_group_name    = "${azurerm_resource_group.project2.name}"
-    storage_account_name   = "${azurerm_storage_account.project2.name}"
-    storage_container_name = "${azurerm_storage_container.function-code.name}"
-
-    type   = "block"
-    source = "./app.zip"
-    content_type = "application/zip"
-}
-
-data "azurerm_storage_account_sas" "project2" {
-    connection_string = "${azurerm_storage_account.project2.primary_connection_string}"
-    https_only        = true
-
-    resource_types {
-        service   = false
-        container = false
-        object    = true
+    assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
     }
-
-    services {
-        blob  = true
-        queue = false
-        table = false
-        file  = false
-    }
-
-    start  = "2019-03-18"
-    expiry = "2029-03-18"
-
-    permissions {
-        read    = true
-        write   = false
-        delete  = false
-        list    = false
-        add     = false
-        create  = false
-        update  = false
-        process = false
-    }
+  ]
+}
+EOF
 }
 
-resource "azurerm_application_insights" "project2" {
-    name                = "project2-appinsights"
-    location            = "westus2"
-    resource_group_name = "${azurerm_resource_group.project2.name}"
-    application_type    = "Web"
+resource "aws_s3_bucket" "queue" {
+  bucket = "${var.bucket-prefix}queue"
+  acl    = "private"
 }
 
-resource "azurerm_function_app" "project2" {
-    name                        = "braidenc-data-science-wrapper"
-    resource_group_name         = "${azurerm_resource_group.project2.name}"
-    location                    = "${azurerm_resource_group.project2.location}"
-    app_service_plan_id         = "${azurerm_app_service_plan.project2.id}"
-    storage_connection_string   = "${azurerm_storage_account.project2.primary_connection_string}"
-    # version                     = "beta"
+resource "aws_s3_bucket" "output" {
+  bucket = "${var.bucket-prefix}output"
+  acl    = "private"
+}
 
-    app_settings {
-        HASH                        = "${filebase64sha256("./app.zip")}"
-        FUNCTION_WORKER_RUNTIME     = "python"
-        WEBSITE_RUN_FROM_PACKAGE    = "https://${azurerm_storage_account.project2.name}.blob.core.windows.net/${azurerm_storage_container.function-code.name}/${azurerm_storage_blob.code-blob.name}${data.azurerm_storage_account_sas.project2.sas}"
-        # https://braidencproject2.blob.core.windows.net/function-code/app.zip
-        APPINSIGHTS_INSTRUMENTATIONKEY = "${azurerm_application_insights.project2.instrumentation_key}"
-    }
+resource "aws_s3_bucket_notification" "bucket_notification" {
+  bucket = "${aws_s3_bucket.queue.id}"
+
+  lambda_function {
+    lambda_function_arn = "${aws_lambda_function.project2.arn}"
+    events              = ["s3:ObjectCreated:*"]
+  }
+}
+
+resource "aws_lambda_permission" "allow_bucket" {
+  statement_id  = "AllowExecutionFromS3Bucket"
+  action        = "lambda:InvokeFunction"
+  function_name = "${aws_lambda_function.project2.arn}"
+  principal     = "s3.amazonaws.com"
+  source_arn    = "${aws_s3_bucket.queue.arn}"
 }
