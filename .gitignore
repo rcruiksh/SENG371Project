@@ -1,2 +1,9 @@
 .terraform/
 app.zip
+venv/
+.vscode/
+__pycache__
+.python-version
+terraform.tfstate.backup
+*.tfstate
+.env/
