@@ -1,13 +1,7 @@
 language: python
 
-before_install:
-        - echo "Installing terraform"
-        - sudo apt-get install unzip
-        - wget https://releases.hashicorp.com/terraform/0.11.13/terraform_0.11.13_linux_amd64.zip
-        - unzip terraform_0.11.13_linux_amd64.zip
-        - sudo mv terraform /usr/local/bin/
-        - terraform --version
-        - terraform init
-        - ./zip.sh
-        - terraform plan
-        - terraform apply
+install:
+  - pip install -r requirements.txt
+# command to run tests
+script:
+  - app/test
