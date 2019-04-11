@@ -5,14 +5,20 @@ import uuid
 
 s3_client = boto3.client('s3')
 
-OUTPUT_BUCKET = os.environ['OUTPUT_BUCKET']
+OUTPUT_BUCKET = os.environ.get('OUTPUT_BUCKET')
+
+def data_modification(data_list):
+    newLines = []
+    for line in data_list:
+        newLines.append( line + " ... every single line")
+    return newLines
 
 def main(download_path, upload_path):
     newLines = []
     with open(download_path, 'r') as file:
         lines = file.readlines()
-        for line in lines:
-            newLines.append( line + " ... every single line")
+        newLines = data_modification(lines)
+
     with open(upload_path, 'w') as file:
         print(newLines)
         file.writelines(newLines)
