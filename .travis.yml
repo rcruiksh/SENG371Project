@@ -1,10 +1,6 @@
 language: python
 
 before_install:
-        - echo "testing AWS"
-        - sudo apt-get update
-        - sudo apt-get install curl apt-transport-https lsb-release gpg
-        - sudo apt-get update
         - echo "Installing terraform"
         - sudo apt-get install unzip
         - wget https://releases.hashicorp.com/terraform/0.11.13/terraform_0.11.13_linux_amd64.zip
