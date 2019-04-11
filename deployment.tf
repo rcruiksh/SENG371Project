@@ -1,5 +1,10 @@
 provider "aws" {
-  region = "us-west-2"
+  region = "${var.region}"
+}
+
+variable "region" {
+  default = "us-west-2"
+  type    = "string"
 }
 
 variable "bucket-prefix" {
@@ -25,6 +30,7 @@ resource "aws_lambda_function" "project2" {
 resource "aws_iam_role_policy" "project2_role_policy" {
   name = "project2_role_policy"
   role = "${aws_iam_role.project2_role.id}"
+
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -58,9 +64,9 @@ EOF
 }
 
 resource "aws_iam_role" "project2_role" {
-    name = "project2_role"
+  name = "project2_role"
 
-    assume_role_policy = <<EOF
+  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
