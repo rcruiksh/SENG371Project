@@ -5,12 +5,12 @@
 ### Pre Requisites
 
 - [Terraform](https://learn.hashicorp.com/terraform/getting-started/install.html)
-- [AWS CLI]()
+- [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html)
 
 It is also assumed that you have logged into the AWS CLI and that you have the appropriate permissions to deploy all necessary infrastructure defined in the Terraform template.
 
 ```bash
-tf init
+tf init # initalize terraform
 ```
 
 ## Deployment

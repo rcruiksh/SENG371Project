@@ -3,8 +3,8 @@ provider "aws" {
 }
 
 variable "region" {
-    default = "us-west-2"
-    type = "string"
+  default = "us-west-2"
+  type    = "string"
 }
 
 variable "bucket-prefix" {
