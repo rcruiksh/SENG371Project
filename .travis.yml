@@ -7,7 +7,7 @@ before_install:
         - unzip terraform_0.11.13_linux_amd64.zip
         - sudo mv terraform /usr/local/bin/
         - terraform --version
-        - terrafrom init
+        - terraform init
         - ./zip.sh
         - terraform plan
         - terraform apply
