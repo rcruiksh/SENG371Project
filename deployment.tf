@@ -2,14 +2,6 @@ provider "aws" {
   region = "${var.region}"
 }
 
-# terraform {
-#   backend "s3" {
-#     bucket = "${aws_s3_bucket.state.bucket}"
-#     key    = "terraform.tfstate"
-#     region = "us-west-2"
-#   }
-# }
-
 variable "region" {
     default = "us-west-2"
     type = "string"
@@ -89,11 +81,6 @@ resource "aws_iam_role" "project2_role" {
   ]
 }
 EOF
-}
-
-resource "aws_s3_bucket" "state" {
-  bucket = "${var.bucket-prefix}tfstate"
-  acl    = "private"
 }
 
 resource "aws_s3_bucket" "queue" {

@@ -23,6 +23,7 @@ def main(download_path, upload_path):
         print(newLines)
         file.writelines(newLines)
 
+# The function called by the Lambda runtime
 def handler(event, context):
     print(OUTPUT_BUCKET)
     for record in event['Records']:
